@@ -312,7 +312,7 @@ npm run test:unit
 - 文档中心：[https://docs.onemonitor.io](https://docs.onemonitor.io)
 - 社区论坛：[https://community.onemonitor.io](https://community.onemonitor.io)
 - 邮箱：hpux_ljf@163.com
-- 微信：OneMonitor_Admin
+- 微信：LI_JianFa
 
 ## 🙏 致谢
 
