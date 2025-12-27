@@ -1,0 +1,103 @@
+/* 全局重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+  background-color: #f5f7fa;
+}
+
+#app {
+  height: 100%;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 基础布局样式 */
+.layout-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-header {
+  height: 60px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.layout-main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.layout-sidebar {
+  width: 240px;
+  background-color: #001529;
+  color: #fff;
+  overflow-y: auto;
+  transition: width 0.3s ease;
+}
+
+.layout-sidebar.collapsed {
+  width: 80px;
+}
+
+.layout-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f5f7fa;
+}
+
+/* 卡片样式 */
+.card-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* 工具类 */
+.mt-10 { margin-top: 10px; }
+.mt-20 { margin-top: 20px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-20 { margin-bottom: 20px; }
+.ml-10 { margin-left: 10px; }
+.mr-10 { margin-right: 10px; }
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-success { color: #67c23a; }
+.text-warning { color: #e6a23c; }
+.text-danger { color: #f56c6c; }
+.text-info { color: #909399; }

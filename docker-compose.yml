@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: onemonitor-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=onemonitor
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d onemonitor"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: onemonitor-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Prometheus 监控
+  prometheus:
+    image: prom/prometheus:v2.49.0
+    container_name: onemonitor-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+
+  # Alertmanager 告警管理
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: onemonitor-alertmanager
+    restart: unless-stopped
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    ports:
+      - "9093:9093"
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+
+  # Grafana 可视化
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: onemonitor-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "3000:3000"
+
+  # CMDB服务
+  cmdb-service:
+    build:
+      context: ./cmdb-service
+      dockerfile: Dockerfile
+    container_name: onemonitor-cmdb-service
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://admin:admin123@postgres:5432/onemonitor
+      - REDIS_URL=redis://redis:6379/0
+      - API_V1_STR=/api/v1
+    ports:
+      - "8001:8000"
+
+  # 后端服务（暂时保留，后续将拆分为其他微服务）
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: onemonitor-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+      - prometheus
+      - cmdb-service
+      - collector-service
+    environment:
+      - DATABASE_URL=postgresql://admin:admin123@postgres:5432/onemonitor
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=your-secret-key-change-me-in-production
+      - PROMETHEUS_URL=http://prometheus:9090
+      - ALERTMANAGER_URL=http://alertmanager:9093
+      - FRONTEND_URL=http://localhost:5173
+      - CMDB_SERVICE_URL=http://cmdb-service:8000
+      - COLLECTOR_SERVICE_URL=http://collector-service:8000
+    ports:
+      - "8000:8000"
+
+  # Collector服务（遥测数据采集服务）
+  collector-service:
+    build:
+      context: ./collector-service
+      dockerfile: Dockerfile
+    container_name: onemonitor-collector-service
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+      - cmdb-service
+    environment:
+      - DATABASE_URL=postgresql://admin:admin123@postgres:5432/onemonitor
+      - REDIS_URL=redis://redis:6379/0
+      - API_V1_STR=/api/v1
+      - CMDB_SERVICE_URL=http://cmdb-service:8000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    ports:
+      - "8002:8000"
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: onemonitor-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_BASE_URL=http://backend:8000/api/v1
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
