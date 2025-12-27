@@ -311,7 +311,7 @@ npm run test:unit
 - 项目官网：[https://onemonitor.io](https://onemonitor.io)
 - 文档中心：[https://docs.onemonitor.io](https://docs.onemonitor.io)
 - 社区论坛：[https://community.onemonitor.io](https://community.onemonitor.io)
-- 邮箱：support@onemonitor.io
+- 邮箱：hpux_ljf@163.com
 - 微信：OneMonitor_Admin
 
 ## 🙏 致谢
