@@ -86,6 +86,32 @@ const routes = [
         meta: { title: '报表中心' }
       },
       {
+        path: 'cmdb',
+        name: 'CMDB',
+        redirect: '/cmdb/ci',
+        meta: { title: '配置管理' },
+        children: [
+          {
+            path: 'ci',
+            name: 'CIList',
+            component: () => import('../views/cmdb/CIList.vue'),
+            meta: { title: '配置项管理' }
+          },
+          {
+            path: 'ci/:id',
+            name: 'CIDetail',
+            component: () => import('../views/cmdb/CIDetail.vue'),
+            meta: { title: '配置项详情' }
+          },
+          {
+            path: 'relation',
+            name: 'CIRelation',
+            component: () => import('../views/cmdb/CIRelation.vue'),
+            meta: { title: '关系拓扑' }
+          }
+        ]
+      },
+      {
         path: 'settings',
         name: 'Settings',
         redirect: '/settings/user',
