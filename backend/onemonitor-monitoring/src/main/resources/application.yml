@@ -1,0 +1,88 @@
+spring:
+  application:
+    name: onemonitor-monitoring
+
+  config:
+    import: optional:file:./config.yaml
+
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:onemonitor}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    show-sql: false
+
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
+    consumer:
+      group-id: onemonitor-monitoring
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+server:
+  port: ${SERVER_PORT:8082}
+  servlet:
+    context-path: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# OpenTelemetry Configuration
+otel:
+  service:
+    name: onemonitor-monitoring
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+      timeout: 10s
+
+logging:
+  level:
+    root: INFO
+    io.onemonitor: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Application specific configuration
+app:
+  monitoring:
+    # Default scrape interval in seconds
+    default-scrape-interval: 15
+    # Default scrape timeout in seconds
+    default-scrape-timeout: 10
+    # Maximum scrape interval in seconds
+    max-scrape-interval: 300
+    # Minimum scrape interval in seconds
+    min-scrape-interval: 5
+    # VictoriaMetrics URL for metrics storage
+    victoria-metrics:
+      url: ${VICTORIA_METRICS_URL:http://localhost:8428}
+    # Loki URL for logs storage
+    loki:
+      url: ${LOKI_URL:http://localhost:3100}
+    # Tempo URL for traces storage
+    tempo:
+      url: ${TEMPO_URL:http://localhost:4317}

@@ -1,0 +1,104 @@
+spring:
+  application:
+    name: onemonitor-alerting
+
+  config:
+    import: optional:file:./config.yaml
+
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:onemonitor}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    show-sql: false
+
+  data:
+    jpa:
+      repositories:
+        enabled: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
+    consumer:
+      group-id: onemonitor-alerting
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+server:
+  port: ${SERVER_PORT:8083}
+  servlet:
+    context-path: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+logging:
+  level:
+    root: INFO
+    io.onemonitor: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Application specific configuration
+app:
+  alerting:
+    # Default evaluation interval in seconds
+    default-evaluation-interval: 15
+    # Default for duration in seconds (0 = fire immediately)
+    default-for-duration: 0
+    # Auto-resolve timeout in seconds (0 = disabled)
+    default-resolve-timeout: 3600
+    # Maximum number of alerts per page
+    max-page-size: 100
+    # Default page size
+    default-page-size: 20
+    # Enable/disable alert evaluation
+    evaluation-enabled: true
+    # Prometheus query timeout in seconds
+    prometheus-query-timeout: 30
+
+  # Redis configuration for alert state caching
+  redis:
+    key-prefix: onemonitor:alerting:
+    ttl-seconds: 3600
+
+  # Notification settings
+  notification:
+    # Retry configuration
+    max-retries: 3
+    retry-delay-ms: 5000
+    # Rate limiting
+    rate-limit-enabled: true
+    rate-limit-window-seconds: 60
+    rate-limit-max-notifications: 100
